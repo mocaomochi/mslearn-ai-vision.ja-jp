@@ -1,52 +1,54 @@
 ---
 lab:
-  title: 顔の検出と分析
-  module: Module 4 - Detecting and Analyze Faces
+    title: '顔を検出、分析、認識する'
+    module: 'Module 4 - 顔を検出、分析、認識する'
 ---
 
 # 顔の検出と分析
 
-人間の顔を検出して分析する機能は、AI のコア機能です。 この演習では、画像内の顔を操作するために使用できる 2 つの Azure AI サービスである **Azure AI Vision** サービスと **Face** サービスについて説明します。
+人間の顔を検出して分析する能力は、AIの基本的な機能です。この演習では、画像内の顔を扱うために使用できる2つのAzure AIサービス、**Azure AI Vision**サービスと**Face**サービスを探ります。
 
-> **重要**: このラボは、制限された機能への追加アクセスを何も要求せずに完了できます。
+> **重要**: このラボは、制限された機能への追加アクセスをリクエストすることなく完了することができます。
 
-> **注**: 2022 年 6 月 21 日から、個人を特定できる情報を返す Azure AI サービスの機能は、[制限付きアクセス](https://docs.microsoft.com/azure/cognitive-services/cognitive-services-limited-access)が許可されているお客様に限定されます。 さらに、感情的な状態を推測する機能は使用できなくなりました。 Microsoft が行った変更と理由について詳しくは、「[顔認識に対する責任ある AI 投資と保護](https://azure.microsoft.com/blog/responsible-ai-investments-and-safeguards-for-facial-recognition/)」をご覧ください。
+> **注意**: 2022年6月21日以降、個人を特定できる情報を返すAzure AIサービスの機能は、[限定アクセス](https://docs.microsoft.com/azure/cognitive-services/cognitive-services-limited-access)を許可された顧客のみが利用できます。また、顔の表情から感情を推測する機能は利用できなくなりました。Microsoftが行った変更とその理由についての詳細は、[顔認識のための責任あるAI投資と安全対策](https://azure.microsoft.com/blog/responsible-ai-investments-and-safeguards-for-facial-recognition/)をご覧ください。
 
-## このコースのリポジトリを複製する
+## このコースのリポジトリをクローンする
 
-まだ行っていない場合は、このコースのコード リポジトリを複製する必要があります。
+まだ行っていない場合は、このコースのコードリポジトリをクローンしてください。
 
-1. Visual Studio Code を起動します。
-2. パレットを開き (SHIFT+CTRL+P)、**Git:Clone** コマンドを実行して、`https://github.com/MicrosoftLearning/mslearn-ai-vision` リポジトリをローカル フォルダーに複製します (どのフォルダーでも問題ありません)。
-3. リポジトリを複製したら、Visual Studio Code でフォルダーを開きます。
-4. リポジトリ内の C# コード プロジェクトをサポートするために追加のファイルがインストールされるまで待ちます。
+1. Visual Studio Codeを起動します。
+2. コマンドパレットを開き（SHIFT+CTRL+P）、**Git: Clone**コマンドを実行して、`https://github.com/MicrosoftLearning/mslearn-ai-vision`リポジトリをローカルフォルダーにクローンします（フォルダーはどこでも構いません）。
+3. リポジトリがクローンされたら、Visual Studio Codeでフォルダーを開きます。
+4. リポジトリ内のC#コードプロジェクトをサポートするために追加のファイルがインストールされるのを待ちます。
 
-    > **注**: ビルドとデバッグに必要なアセットを追加するように求めるプロンプトが表示された場合は、**[今はしない]** を選択します。
+    > **注意**: ビルドとデバッグに必要なアセットを追加するように求められた場合は、**Not Now**（今はしない）を選択してください。
 
 ## Azure AI サービス リソースをプロビジョニングする
 
-サブスクリプションに **Azure AI サービス** リソースがまだない場合は、プロビジョニングする必要があります。
+まだサブスクリプションにない場合は、**Azure AI サービス**リソースをプロビジョニングする必要があります。
 
-1. Azure portal (`https://portal.azure.com`) を開き、ご利用の Azure サブスクリプションに関連付けられている Microsoft アカウントを使用してサインインします。
-2. 上部の検索バーで 「*Azure AI サービス*」を検索し、**[Azure AI サービス]** を選択し、次の設定で Azure AI サービス マルチサービス アカウント リソースを作成します。
-    - **[サブスクリプション]**:"*ご自身の Azure サブスクリプション*"
-    - **リソース グループ**: *リソース グループを選択または作成します (制限付きサブスクリプションを使用している場合は、新しいリソース グループを作成する権限がないことがあります。提供されているものを使ってください)*
-    - **[リージョン]**: 使用できるリージョンを選択します**
-    - **[名前]**: *一意の名前を入力します*
+1. `https://portal.azure.com` で Azure ポータルを開き、Azure サブスクリプションに関連付けられている Microsoft アカウントを使用してサインインします。
+2. 上部の検索バーで「Azure AI services」を検索し、**Azure AI Services**を選択します。次の設定で **Azure AI Services multi-service account** リソースを作成してください。
+    - **サブスクリプション**: *あなたの Azure サブスクリプション*
+    - **リソース グループ**: *リソース グループを選択または作成します（制限されたサブスクリプションを使用している場合、新しいリソース グループを作成する権限がないかもしれません。その場合は提供されたものを使用してください）*
+    - **リージョン**: *利用可能なリージョンを選択します*
+    - **名前**: *一意の名前を入力します*
     - **価格レベル**: Standard S0
-3. 必要なチェック ボックスをオンにして、リソースを作成します。
-4. デプロイが完了するまで待ち、デプロイの詳細を表示します。
-5. リソースがデプロイされたら、そこに移動して、その **[キーとエンドポイント]** ページを表示します。 次の手順では、このページのエンドポイントとキーの 1 つが必要になります。
+      ![Create a Azure AI services](../media/04/create-ai-services.png)
 
-## Azure AI Vision SDK を使用するための準備をする
+3. 必要なチェックボックスを選択し、リソースを作成します。
+4. デプロイが完了するのを待ち、デプロイの詳細を表示します。
+5. リソースがデプロイされたら、それに移動して **キーとエンドポイント** ページを表示します。この後の手順でエンドポイントとキーの1つが必要になります。
 
-この演習では、Azure AI Vision SDK を使用して画像内の顔を分析する、部分的に実装されたクライアント アプリケーションを完成させます。
 
-> **注**: **C#** または **Python** 用の SDK のいずれかに使用することを選択できます。 以下の手順で、希望する言語に適したアクションを実行します。
+## Azure AI Vision SDK の準備
 
-1. Visual Studio Code の **[エクスプローラー]** ペインで、**04-face** フォルダーを参照し、言語の設定に応じて **C-Sharp** または **Python** フォルダーを展開します。
-2. **computer-vision** フォルダーを右クリックして、統合ターミナルを開きます。 次に、言語設定に適したコマンドを実行して、Azure AI Vision SDK パッケージをインストールします。
+この演習では、Azure AI Vision SDK を使用して画像内の顔を分析するクライアントアプリケーションを完成させます。
 
+> **注意**: **C#** または **Python** のどちらかの SDK を使用することができます。以下の手順では、あなたの好みの言語に応じた手順を実行してください。
+
+1. Visual Studio Code の **エクスプローラー** ペインで **04-face** フォルダーに移動し、使用する言語に応じて **C-Sharp** または **Python** フォルダーを展開します。
+2. **computer-vision** フォルダーを右クリックして統合ターミナルを開きます。その後、使用する言語に応じて以下のコマンドを実行して Azure AI Vision SDK パッケージをインストールします：
     **C#**
 
     ```
@@ -59,19 +61,18 @@ lab:
     pip install azure-ai-vision-imageanalysis==1.0.0b3
     ```
     
-3. **computer-vision** フォルダーの内容を表示し、構成設定用のファイルが含まれていることを確認してください。
-    - **C#** : appsettings.json
+3. **computer-vision** フォルダーの内容を確認し、設定ファイルが含まれていることを確認します：
+    - **C#**: appsettings.json
     - **Python**: .env
 
-4. 構成ファイルを開き、構成値を更新して、Azure AI サービス リソースの**エンドポイント**と認証**キー**を反映します。 変更を保存します。
+4. 設定ファイルを開き、Azure AI サービス リソースの **エンドポイント** と認証 **キー** を反映するように設定値を更新します。変更を保存してください。
 
-5. **computer-vision** フォルダーに、クライアント アプリケーションの次のコード ファイルが含まれていることを確認してください。
+5. **computer-vision** フォルダーには、クライアントアプリケーション用のコードファイルが含まれていることを確認してください：
 
-    - **C#** : Program.cs
+    - **C#**: Program.cs
     - **Python**: detect-people.py
 
-6. コード ファイルを開き、上部の既存の名前空間参照の下で、「**Import namespaces**」というコメントを見つけます。 次に、このコメントの下に、次の言語固有のコードを追加して、Azure AI Vision SDK を使用するために必要な名前空間をインポートします。
-
+6. コードファイルを開き、既存の名前空間参照の下にある **Import namespaces** というコメントを見つけます。その後、このコメントの下に、Azure AI Vision SDK を使用するために必要な名前空間をインポートするための、言語ごとのコードを追加します：
     **C#**
 
     ```C#
@@ -88,18 +89,22 @@ lab:
     from azure.core.credentials import AzureKeyCredential
     ```
 
-## 分析する画像の確認
+## 分析する画像を表示する
 
-この演習では、Azure AI Vision サービスを使用して、人物の画像を分析します。
+この演習では、Azure AI Vision サービスを使用して人々の画像を分析します。
 
-1. Visual Studio Code で、**computer-vision** フォルダーとそれに含まれる **images** フォルダーを展開します。
+1. Visual Studio Code で **computer-vision** フォルダーを展開し、その中にある **images** フォルダーを開きます。
 2. **people.jpg** 画像を選択して表示します。
+   
+   ![people.jpg](../media/04/face_analysis_original_people.jpg)
 
+> **注意**: この演習で使用するC#のコードファイルは`System.Drawing.Common` パッケージを使用します。このパッケージはMacOSに対応していないため、MacOSでは実行できません。例外エラーで停止します。
+> 
 ## 画像内の顔を検出する
 
-これで、SDK を使用して Computer Vision サービスを呼び出し、画像内の顔を検出する準備が整いました。
+これで、SDKを使用してVisionサービスを呼び出し、画像内の顔を検出する準備が整いました。
 
-1. クライアント アプリケーションのコード ファイル (**Program.cs** または **detect-people.py**) の **Main** 関数で、構成設定を読み込むためのコードが提供されていることを確認してください。 次に、「**Authenticate Azure AI Vision client**」というコメントを見つけます。 次に、このコメントの下に、次の言語固有のコードを追加して、Azure AI Vision クライアント オブジェクトを作成および認証します。
+1. クライアントアプリケーションのコードファイル（**Program.cs** または **detect-people.py**）の **Main** 関数で、設定を読み込むコードが提供されていることを確認します。その後、**Authenticate Azure AI Vision client** というコメントを見つけます。このコメントの下に、Azure AI Vision クライアントオブジェクトを作成して認証するための、言語ごとのコードを追加します。
 
     **C#**
 
@@ -120,10 +125,9 @@ lab:
     )
     ```
 
-2. **Main** 関数の追加したコードの下で、コードが画像ファイルへのパスを指定し、その画像パスを **AnalyzeImage** という名前の関数に渡していることを確認してください。 この関数はまだ完全には実装されていません。
+2. **Main** 関数で、先ほど追加したコードの下に、画像ファイルのパスを指定し、その画像パスを **AnalyzeImage** という関数に渡すコードがあることを確認してください。この関数はまだ完全には実装されていません。
 
-3. **AnalyzeImage** 関数で、「**Get result with specify features to be retrieved (PEOPLE)**」というコメントの下に、次のコードを追加します。
-
+3. **AnalyzeImage** 関数で、コメント **Get result with specified features to be retrieved (PEOPLE)** の下に、以下のコードを追加してください。
     **C#**
 
     ```C#
@@ -144,7 +148,7 @@ lab:
     )
     ```
 
-4. **AnalyzeImage** 関数で、「**Draw bounding box around detected people**」というコメントの下に、次のコードを追加します。
+4. **AnalyzeImage** 関数で、コメント **Draw bounding box around detected people** の下に、以下のコードを追加します：
 
     **C#**
 
@@ -180,7 +184,7 @@ lab:
         #print(" {} (confidence: {:.2f}%)".format(detected_people.bounding_box, detected_people.confidence * 100))
     ```
 
-5. 変更を保存し、**computer-vision** フォルダーの統合ターミナルに戻り、次のコマンドを入力してプログラムを実行します。
+5. 変更を保存し、**computer-vision** フォルダーの統合ターミナルに戻り、次のコマンドを入力してプログラムを実行します：
 
     **C#**
 
@@ -194,17 +198,23 @@ lab:
     python detect-people.py
     ```
 
-6. 検出された顔の数を示す出力を確認します。
-7. コード ファイルと同じフォルダーに生成された **people.jpg** ファイルを表示して、注釈付きの顔を確認します。 この場合、コードは顔の属性を使用してボックスの左上の場所にラベルを付け、境界ボックスの座標を使用して各顔の周りに長方形を描画しています。
+6. 出力結果を確認し、検出された顔の数が表示されることを確認してください。
+7. コードファイルと同じフォルダーに生成された **people.jpg** ファイルを表示して、注釈が付けられた顔を確認します。この場合、コードは顔の属性を使用してボックスの左上の位置をラベル付けし、バウンディングボックス（囲み枠）の座標を使用して人物の周りに長方形を描画します。
+   
+    *出力結果 people.jpg*
+    ![people.jpg](../media/04/people_result_people.jpg)
 
-サービスによって検出されたすべてのユーザーの信頼度スコアを表示する場合は、コメント `Return the confidence of the person detected` の下のコード行のコメントを解除し、コードを再実行できます。
+サービスが検出したすべての人の信頼度スコアを確認したい場合は、`Return the confidence of the person detected` というコメントの下にあるコード行のコメントを解除して、コードを再実行してください。
+    *実行結果*
+    ![Show confidence](../media/04/people_results_show_confidence.png)
 
-## Face SDK を使用する準備をする
 
-**Azure AI Vision** サービスは (他の多くの画像分析機能とともに) 基本的な顔検出を提供しますが、**Face** サービスは顔の分析と認識のためのより包括的な機能を提供します。
+## Face SDKの準備
 
-1. Visual Studio Code の **[エクスプローラー]** ペインで、**04-face** フォルダーを参照し、言語の設定に応じて **C-Sharp** または **Python** フォルダーを展開します。
-2. **face-api** フォルダーを右クリックして、統合ターミナルを開きます。 次に、言語設定に適したコマンドを実行して、Face SDK パッケージをインストールします。
+**Azure AI Vision**サービスは基本的な顔検出（および他の多くの画像分析機能）を提供しますが、**Face**サービスは顔の分析と認識のためのより包括的な機能を提供します。
+
+1. Visual Studio Codeの**エクスプローラー**ペインで、**04-face**フォルダーに移動し、使用する言語に応じて**C-Sharp**または**Python**フォルダーを展開します。
+2. **face-api**フォルダーを右クリックして統合ターミナルを開き、使用する言語に応じて以下のコマンドを実行してFace SDKパッケージをインストールします：
 
     **C#**
 
@@ -218,18 +228,18 @@ lab:
     pip install azure-ai-vision-face==1.0.0b2
     ```
     
-3. **face-api** フォルダーの内容を表示し、構成設定用のファイルが含まれていることを確認してください。
-    - **C#** : appsettings.json
+3. **face-api** フォルダーの内容を確認し、設定ファイルが含まれていることを確認します：
+    - **C#**: appsettings.json
     - **Python**: .env
 
-4. 構成ファイルを開き、構成値を更新して、Azure AI サービス リソースの**エンドポイント**と認証**キー**を反映します。 変更を保存します。
+4. 設定ファイルを開き、Azure AI サービス リソースの **エンドポイント** と認証 **キー** を反映するように設定値を変更します。変更したら保存してください。
 
-5. **face-api** フォルダーに、クライアント アプリケーションの次のコード ファイルが含まれていることを確認してください。
+5. **face-api** フォルダーには、クライアントアプリケーション用のコードファイルが含まれています：
 
-    - **C#** : Program.cs
+    - **C#**: Program.cs
     - **Python**: analyze-faces.py
 
-6. コード ファイルを開き、上部の既存の名前空間参照の下で、「**Import namespaces**」というコメントを見つけます。 次に、このコメントの下に、次の言語固有のコードを追加して Vision SDK を使用するために必要な名前空間をインポートします。
+6. コードファイルを開き、既存の名前空間参照の下にある **Import namespaces** というコメントを見つけます。その後、このコメントの下に、Vision SDK を使用するために必要な名前空間をインポートするための、言語ごとのコードを追加してください。
 
     **C#**
 
@@ -248,7 +258,7 @@ lab:
     from azure.core.credentials import AzureKeyCredential
     ```
 
-7. **Main** 関数で、構成設定をロードするためのコードが提供されていることを確認してください。 次に、コメント "**Authenticate Face client**" を見つけます。 次に、このコメントの下に、次の言語固有のコードを追加して、**FaceClient** オブジェクトを作成および認証します。
+7. **Main** 関数で、設定を読み込むコードが提供されていることを確認します。その後、**Authenticate Face client** というコメントを見つけます。このコメントの下に、**FaceClient** オブジェクトを作成して認証するための、言語ごとのコードを追加します：
 
     **C#**
 
@@ -269,15 +279,15 @@ lab:
     )
     ```
 
-8. **Main** 関数で、追加したコードの下に、コード内の関数を呼び出して Face サービスの機能を調べることができるメニューがコードに表示されることを確認してください。 この演習の残りの部分では、これらの関数を実装します。
+8. **Main** 関数で、先ほど追加したコードの下に、Face サービスの機能を探索するための関数を呼び出すメニューを表示するコードがあることに注意してください。これらの関数は、この演習の残りの部分で実装します。
 
 ## 顔を検出して分析する
 
-顔認証サービスの最も基本的な機能の 1 つは、画像内の顔を検出し、頭部姿勢、ぼやけ、マスクの存在などの属性を決定することです。
+Face サービスの最も基本的な機能の1つは、画像内の顔を検出し、頭の向き、ぼかし、マスクの有無などの属性を判断することです。
 
-1. アプリケーションのコード ファイルの **Main** 関数で、ユーザーがメニュー オプション **1** を選択した場合に実行されるコードを調べます。 このコードは **DetectFaces** 関数を呼び出し、パスを画像ファイルに渡します。
-2. コード ファイルで **DetectFaces** 関数を見つけて、コメント "**Specify facial features to be retrieved**" の下に、次のコードを追加します。
-
+1. アプリケーションのコードファイルで、**Main** 関数内のユーザーがメニューオプション **1** を選択した場合に実行されるコードを確認します。このコードは、画像ファイルのパスを渡して **DetectFaces** 関数を呼び出します。
+2. コードファイル内の **DetectFaces** 関数を見つけ、コメント **Specify facial features to be retrieved** の下に次のコードを追加します。
+   
     **C#**
 
     ```C#
@@ -299,7 +309,7 @@ lab:
                 FaceAttributeTypeDetection03.MASK]
     ```
 
-3. **DetectFaces** 関数に追加したコードの下で、コメント "**Get faces**" を見つけて、次のコードを追加します。
+3. **DetectFaces** 関数で、先ほど追加したコードの下にある **Get faces** というコメントを見つけ、その下に次のコードを追加します：
 
 **C#**
 
@@ -409,8 +419,8 @@ with open(image_file, mode="rb") as image_data:
         print('\nResults saved in', outputfile)
 ```
 
-4. **DetectFaces** 関数に追加したコードを調べます。 画像ファイルを分析し、頭部姿勢、ぼやけ、マスクの存在などの属性も含めて、その画像ファイルに含まれるすべての顔を検出します。 各顔に割り当てられた一意の顔識別子を含む、各顔の詳細が表示されます。顔の位置は、境界ボックスを使用して画像に示されます。
-5. 変更を保存して **face-api** フォルダーの統合ターミナルに戻り、次のコマンドを入力してプログラムを実行します。
+4. **DetectFaces** 関数に追加したコードを確認してください。このコードは画像ファイルを分析し、顔を検出します。検出された顔には、頭の向き、ぼかし、マスクの有無などの属性が含まれます。各顔の詳細が表示され、顔ごとに一意の識別子が割り当てられます。また、顔の位置がバウンディングボックス（囲み枠）で画像上に示されます。
+5. 変更を保存し、**face-api** フォルダーの統合ターミナルに戻り、次のコマンドを入力してプログラムを実行してください。
 
     **C#**
 
@@ -418,7 +428,7 @@ with open(image_file, mode="rb") as image_data:
     dotnet run
     ```
 
-    *C# 出力に、**await** 演算子を使用している非同期関数に関する警告が表示される場合があります。これは無視してもかまいません。*
+    > C#の出力には、非同期関数が**await**演算子を使用していないという警告が表示されることがありますが、これらは無視して構いません。
 
     **Python**
 
@@ -426,13 +436,19 @@ with open(image_file, mode="rb") as image_data:
     python analyze-faces.py
     ```
 
-6. プロンプトが表示されたら、「**1**」と入力し、出力を観察します。ここには、検出された各顔の ID と属性が含まれているはずです。
-7. コード ファイルと同じフォルダーに生成された **detected_faces.jpg** ファイルを表示して、注釈付きの顔を確認します。
+6. プログラムが実行されたら、**1** を入力して出力結果を確認します。出力には、検出された各顔のIDと属性が含まれます。
+
+    *実行例 Python*
+    ![Analyze face result](../media/04/analyze-faces-result.png)
+
+7. コードファイルと同じフォルダーに生成された **detected_faces.jpg** ファイルを表示して、注釈が付けられた顔を確認します。
+
+    ![Detected feces](../media/04/detected_faces.jpg)
 
 ## 詳細情報
 
-**Face** サービスにはいくつかの追加機能がありますが、[責任ある AI 標準](https://aka.ms/aah91ff)に従うと、制限付きアクセス ポリシーで制限されます。 これらの機能には、顔認識モデルの識別、検証、作成が含まれます。 詳細とアクセスの申請については、「[Azure AI サービスの制限付きアクセス](https://docs.microsoft.com/en-us/azure/cognitive-services/cognitive-services-limited-access)」を参照してください。
+**Face** サービスには、他にもいくつかの機能がありますが、[責任あるAI標準](https://aka.ms/aah91ff)に従い、これらの機能は制限付きアクセスポリシーのもとで提供されています。これらの機能には、顔の識別、検証、顔認識モデルの作成が含まれます。詳しく知りたい方やアクセスを申請したい方は、[Azure AI サービスの制限付きアクセス](https://docs.microsoft.com/ja-jp/azure/cognitive-services/cognitive-services-limited-access)をご覧ください。
 
-顔検出に **Azure AI Vision** サービスを使用する方法の詳細については、「[Azure AI Vision のドキュメント](https://docs.microsoft.com/azure/cognitive-services/computer-vision/concept-detecting-faces)」を参照してください。
+**Azure AI Vision** サービスを使った顔検出について詳しく知りたい方は、[Azure AI Vision ドキュメント](https://docs.microsoft.com/ja-jp/azure/cognitive-services/computer-vision/concept-detecting-faces)をご覧ください。
 
-**Face** サービスの詳細については、[Face のドキュメント](https://learn.microsoft.com/azure/ai-services/computer-vision/overview-identity)を参照してください。
+**Face** サービスについてもっと知りたい方は、[Face ドキュメント](https://learn.microsoft.com/ja-jp/azure/ai-services/computer-vision/overview-identity)をご覧ください。

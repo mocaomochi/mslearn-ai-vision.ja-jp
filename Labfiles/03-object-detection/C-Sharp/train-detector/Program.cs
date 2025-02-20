@@ -76,6 +76,11 @@ namespace train_detector
                         
                         // Look up the tag ID for this tag name
                         var tag_item = tags.FirstOrDefault(t => t.Name == tag_name);
+                        if (tag_item == null)
+                        {
+                            Console.WriteLine($"Tag '{tag_name}' not found.");
+                            continue; // Skip this tag if not found
+                        }
                         Guid tag_id = tag_item.Id;
                         Double left = tag.GetProperty("left").GetDouble();
                         Double top = tag.GetProperty("top").GetDouble();

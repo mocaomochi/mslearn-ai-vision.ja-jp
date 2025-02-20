@@ -1,116 +1,154 @@
 ---
 lab:
-  title: Azure AI Vision カスタム モデルを使用して画像を分類する
-  module: Module 2 - Develop computer vision solutions with Azure AI Vision
+    title: 'Classify images with an Azure AI Vision custom model'
+    module: 'Module 2 - Azure AI Vision でコンピュータービジョンソリューションを作成する'
 ---
 
-# Azure AI Vision カスタム モデルを使用して画像を分類する
+# Azure AI Vision を使って画像を分類する
 
-Azure AI Vision を使用すると、カスタム モデルをトレーニングして、指定したラベルを持つオブジェクトを分類して検出できます。 このラボでは、果物の画像を分類するカスタム画像分類モデルを構築します。
+Azure AI Vision を使うと、指定したラベルでオブジェクトを分類・検出するカスタムモデルをトレーニングできます。このラボでは、果物の画像を分類するカスタム画像分類モデルを作成します。
 
-## このコースのリポジトリを複製する
+## このコースのリポジトリをクローンする
 
-このラボで作業している環境に **Azure AI Vision** コード リポジトリをまだクローンしていない場合は、次の手順に従ってクローンします。 それ以外の場合は、複製されたフォルダーを Visual Studio Code で開きます。
+まだ **Azure AI Vision** コードリポジトリを作業環境にクローンしていない場合は、以下の手順に従ってクローンしてください。すでにクローンしている場合は、Visual Studio Code でクローンしたフォルダーを開いてください。
 
 1. Visual Studio Code を起動します。
-2. パレットを開き (SHIFT+CTRL+P)、**Git:Clone** コマンドを実行して、`https://github.com/MicrosoftLearning/mslearn-ai-vision` リポジトリをローカル フォルダーに複製します (どのフォルダーでも問題ありません)。
-3. リポジトリを複製したら、Visual Studio Code でフォルダーを開きます。
-4. リポジトリ内の C# コード プロジェクトをサポートするために追加のファイルがインストールされるまで待ちます。
+2. コマンドパレットを開きます (SHIFT+CTRL+P) そして **Git: Clone** コマンドを実行して、`https://github.com/MicrosoftLearning/mslearn-ai-vision` リポジトリをローカルフォルダーにクローンします（フォルダーはどこでも構いません）。
+3. リポジトリがクローンされたら、Visual Studio Code でフォルダーを開きます。
+4. リポジトリ内の C# コードプロジェクトをサポートするための追加ファイルがインストールされるのを待ちます。
+    > **注意**: ビルドとデバッグに必要なアセットを追加するように求められた場合は、**今は追加しない** を選択してください。*Azure Function プロジェクトがフォルダー内で検出されました* というメッセージが表示された場合は、そのメッセージを閉じても問題ありません。
 
-    > **注**: ビルドとデバッグに必要なアセットを追加するように求めるプロンプトが表示された場合は、**[今はしない]** を選択します。 「*フォルダー内の Azure Function プロジェクトが検出されました*」というメッセージが表示された場合は、そのメッセージを安全に閉じてかまいません。
+## Azure AI サービス リソースをプロビジョニングする
 
-## Azure リソースをプロビジョニングする
+まだサブスクリプションに **Azure AI サービス** リソースがない場合は、以下の手順に従ってプロビジョニングしてください。
 
-サブスクリプションにまだリソースがない場合は、**Azure AI サービス** リソースをプロビジョニングする必要があります。
+1. `https://portal.azure.com` で Azure ポータルを開き、Azure サブスクリプションに関連付けられている Microsoft アカウントを使用してサインインします。
+2. 検索バーに「Azure AI services」と入力し、**Azure AI services multi-service account** を選択して、次の設定で Azure AI サービスのマルチサービス アカウント リソースを作成します。
+    ![Find Azure AI services multi-service account](../media/02/find_azure_ai_service_multi_service_account.png)
 
-1. Azure portal (`https://portal.azure.com`) を開き、ご利用の Azure サブスクリプションに関連付けられている Microsoft アカウントを使用してサインインします。
-2. 上部の検索バーで 「*Azure AI サービス*」を検索し、**[Azure AI サービス]** を選択し、次の設定で Azure AI サービス マルチサービス アカウント リソースを作成します。
-    - **[サブスクリプション]**:"*ご自身の Azure サブスクリプション*"
-    - **リソース グループ**: *リソース グループを選択または作成します (制限付きサブスクリプションを使用している場合は、新しいリソース グループを作成する権限がないことがあります。提供されているものを使ってください)*
-    - **リージョン**: *米国東部、西ヨーロッパ、米国西部 2 から選択します\**
-    - **[名前]**: *一意の名前を入力します*
+    - **サブスクリプション**: *あなたの Azure サブスクリプション*
+    - **リソースグループ**: *既存のリソース グループを選択するか、新しいリソース グループを作成します（制限付きサブスクリプションを使用している場合は、新しいリソース グループを作成する権限がないかもしれません。その場合は提供されたものを使用してください）*
+    - **リージョン**: *East US、West US、France Central、Korea Central、North Europe、Southeast Asia、West Europe、または East Asia から選択します*
+    - **名前**: *一意の名前を入力します*
     - **価格レベル**: Standard S0
+    \*Azure AI Vision 4.0 の全機能セットは現在、これらのリージョンでのみ利用可能です。Japan East, Japan Westは選択できないことに注意してください。
+    *設定例*
+    ![Provision an Azure AI Services resource](../media/02/create-ai-services.png)
 
-    \*Azure AI Vision 4.0 カスタム モデル タグは、現在、これらのリージョンでのみ使用できます。
+3. 必要なチェックボックスにチェックを入れ、リソースを作成します。
 
-3. 必要なチェック ボックスをオンにして、リソースを作成します。
-<!--4. When the resource has been deployed, go to it and view its **Keys and Endpoint** page. You will need the endpoint and one of the keys from this page in a future step. Save them off or leave this browser tab open.-->
+トレーニング画像を保存するためにストレージアカウントも必要です。
 
-トレーニング イメージを格納するためのストレージ アカウントも必要です。
-
-1. Azure portal で**ストレージ アカウント**を検索して選択し、次の設定で新しいストレージ アカウントを作成します。
-    - **[サブスクリプション]**:"*ご自身の Azure サブスクリプション*"
-    - **リソース グループ**: *Azure AI サービス リソースで作成したリソース グループと同じものを選択します*
-    - **ストレージ アカウント名**: customclassifySUFFIX 
-        - *注: リソース名がグローバルに一意になるように、`SUFFIX` トークンをイニシャルまたは別の値に置き換えます。*
-    - **リージョン**: *Azure AI サービス リソースに使用したリージョンと同じものを選択します*
-    - **プライマリ サービス**: Azure Blob Storage または Azure Data Lake Storage Gen 2
-    - **プライマリ ワークロード**: その他
-    - **パフォーマンス**: 標準
-    - **冗長**: ローカル冗長ストレージ (LRS)
-1. ストレージ アカウントの作成中に、Visual Studio Code に移動し、**Labfiles/02-image-classification** フォルダーを展開します。
-1. そのフォルダーで **replace.ps1** を選択し、コードを確認します。 後の手順で使用する JSON ファイル (COCO ファイル) のプレースホルダーのストレージ アカウントの名前が置き換えられていることがわかります。 ファイルの *1 行目のみ*にあるプレースホルダーを、お使いのストレージ アカウントの名前に置き換えます。 ファイルを保存します。
-1. **02-image-classification** フォルダーを右クリックして、統合ターミナルを開きます。 次のコマンドを実行します。
-
+1. Azure ポータルで **ストレージアカウント** を検索して選択し、次の設定で新しいストレージアカウントを作成します:
+    - **サブスクリプション**: *あなたの Azure サブスクリプション*
+    - **リソースグループ**: *Azure AI サービスリソースを作成したのと同じリソースグループを選択します*
+    - **ストレージアカウント名**: customclassifySUFFIX 
+        - *注: `SUFFIX` トークンをあなたのイニシャルや他の値に置き換えて、リソース名がグローバルに一意になるようにします。*
+    - **リージョン**: *Azure AI サービスリソースを作成したのと同じリージョンを選択します*
+    - **プライマリサービス**: Azure Blob Storage または Azure Data Lake Storage Gen 2
+    - **パフォーマンス**: スタンダード
+    - **冗長性**: ローカル冗長ストレージ (LRS)
+    ![Create a storage account](../media/02/create_a_storage_account.png)
+2. ストレージアカウントが作成される間に、Visual Studio Code を開き、**Labfiles/02-image-classification** フォルダーを展開します。
+3. Windowsの場合は、そのフォルダー内の **replace.ps1** を、MacOSの場合は **replace.sh** 選択してコードを確認します。このスクリプトは、後のステップで使用する JSON ファイル (COCO ファイル) のプレースホルダーをストレージアカウント名に置き換えます。ファイルの最初の行のプレースホルダーをストレージアカウント名に置き換えて、ファイルを保存します。
+*設定例 (replace.ps1の赤枠の部分をストレージアカウント名に置き換えています)*
+![Change replace.ps1 file](../media/02/change_replace_ps1.png)
+*設定例 (replace.shの赤枠の部分をストレージアカウント名に置き換えています)*
+![Change replace.sh file](./media/02/change_replace_sh.png)
+4. **02-image-classification** フォルダーを右クリックして統合ターミナルを開き、次のコマンドを実行します。
+   
+   *Windowsの場合*
     ```powershell
     ./replace.ps1
     ```
 
-1. COCO ファイルを確認して、お使いのストレージ アカウント名が存在することを確認できます。 **training-images/training_labels.json** を選択し、最初のいくつかのエントリを表示します。 *[absolute_url]* フィールドに *"https://myStorage.blob.core.windows.net/fruit/...* のように表示されます。変更が正常に表示されていない場合は、PowerShell スクリプトの 1 行目のプレースホルダーのみを更新したことを確認してください。
-1. JSON ファイルと PowerShell ファイルの両方を閉じて、ブラウザー ウィンドウに戻ります。
-1. ストレージ アカウントが完成しているはずです。 ストレージ アカウントに移動します。
-1. ストレージ アカウントのパブリック アクセスを有効にします。 左側のウィンドウで、**[設定]** グループの **[構成]** に移動し、*[BLOB の匿名アクセスを許可する]* を有効にします。 **[保存]** を選びます。
-1. 左側のウィンドウの **[データ ストレージ]** で、**[コンテナー]** を選択し、「`fruit`」という名前の新しいコンテナーを作成し、**[匿名アクセス レベル]** を *[コンテナー (コンテナーと BLOB の匿名読み取りアクセス)]* に設定します。
+    *MacOSの場合*
+    ```bash
+    sh ./replace.sh
+    ```
+5. ストレージアカウント名が正しく反映されているか、COCOファイルを確認してください。**training-images/training_labels.json** を開き、最初の数エントリを確認してください。*absolute_url* フィールドに `https://myStorage.blob.core.windows.net/fruit/...` のようなURLが表示されているはずです。期待した変更がされていない場合は、PowerShellまたはShellスクリプトの最初のプレースホルダー（`storageAcct = "xxxx"` の部分）のみを変更したかを確認してください。
+6. JSONファイルとPowerShellもしくはShellファイルの両方を閉じて、Azure ポータルのブラウザウィンドウに戻ります。
+7. ストレージアカウントの作成が完了しているはずです。作成したストレージアカウントの**リソースに移動**します。
+8. ストレージアカウントでパブリックアクセスを有効にします。左側のペインで、**設定** グループの **構成** に移動し、*BLOB匿名アクセスを許可* を有効にし、**保存** を選択します。
+    ![Enable Blog Anonymous Access](../media/02/enable_blob_anonymous_access.png)
+9. 左側のペインで、**データストレージ** の **コンテナー** を選択し、`fruit` という名前の新しいコンテナーを作成し、**匿名アクセスレベル** を *コンテナー (コンテナーとBLOBの匿名読み取りアクセス)* に設定します。
 
-    > **注**: **匿名アクセス レベル**が無効になっている場合は、ブラウザー ページを更新します。
+    > **注意**: **匿名アクセスレベル** が無効になっている場合は、ブラウザページを更新してください。
 
-1. `fruit` に移動し、**[アップロード]** を選択して、**Labfiles/02-image-classification/training-images** 内の画像 (および 1 つの JSON ファイル) をそのコンテナーにアップロードします。
+    ![Create a new strage container](../media/02/create_a_new_storage_container.png)
 
-## カスタム モデルのトレーニング プロジェクトを作成する
+10. `fruit` コンテナーに移動し、**アップロード** を選択して、**Labfiles/02-image-classification/training-images** フォルダー内の画像と JSON ファイルをそのコンテナーにアップロードします。
 
-次に、Vision Studio でカスタム画像分類用の新しいトレーニング プロジェクトを作成します。
+    ![Upload training images](../media/02/upload_training_images.png)
 
-1. Web ブラウザーで `https://portal.vision.cognitive.azure.com/` に移動し、Azure AI リソースを作成した Microsoft アカウントでサインインします。
-1. **[画像を使用してモデルをカスタマイズする]** タイルを選択します（既定のビューに表示されていない場合は、**[画像分析]** タブにあります）。
-1. 作成した Azure AI サービス アカウントを選択します。
-1. プロジェクトで、上部にある **[新しいデータセットの追加]** を選択します。 次の設定で  を構成します。
+## カスタムモデルのトレーニングプロジェクトを作成する
+
+次に、Vision Studio でカスタム画像分類のための新しいトレーニングプロジェクトを作成します。
+
+1. ウェブブラウザーで `https://portal.vision.cognitive.azure.com/` にアクセスし、Azure AI リソースを作成した Microsoft アカウントでサインインします。
+2. **Customize models with images (画像を使ったカスタマイズモデル)** タイルを選択します（デフォルトビューに表示されていない場合は **Image Analysis(画像分析)** タブにあります）。
+
+    ![Azure AI Vision Studio](../media/02/vision-studio.png)
+
+3. 作成した Azure AI サービスのリソースを選択します。
+   
+    ![Select your AI service resouce](../media/02/select_your_ai_service_resource.png)
+
+    > ここで Azure AI サービスのリソースが表示されない場合、リソースを作成する際に**Azure AI service multi-service account** が選択されていなかったかもしれません。もしその場合は、Azure AI サービスリソースを作り直してください。
+
+4. プロジェクトで、上部の **Add new dataset (新しいデータセットを追加)** を選択し、次の設定で構成します:
+     ![Create a new dataset](../media/02/create_a_new_dataset.png)
     - **データセット名**: training_images
-    - **モデルの種類**: 画像分類
-    - **Azure Blob Storage コンテナーの選択**: **[コンテナーの選択]** を選択します
-        - **[サブスクリプション]**:"*ご自身の Azure サブスクリプション*"
-        - **ストレージ アカウント**: *作成したストレージ アカウント*
-        - **BLOB コンテナー**: 果物
-    - [Vision Studio による Blob Storage への読み取りと書き込みを許可する] ボックスを選択します
-1. **training_images** データセットを選択します。
+    - **モデルタイプ**: Image classification (画像分類)
+    - **Azure Blob ストレージコンテナーを選択**: **Select Container(コンテナーを選択)** を選択
+        ![Select the target Azure Blob](../media/02/select_the_target_azure_blog.png)
+        - **サブスクリプション**: *あなたの Azure サブスクリプション*
+        - **ストレージアカウント**: *作成したストレージアカウント*
+        - **Blob コンテナー**: fruit
 
-プロジェクト作成のこの時点で、通常は **[Azure ML データのラベル付けプロジェクトを作成する]** を選択し、画像にラベルを付けます。これにより COCO ファイルが生成されます。 時間がある場合は、これを試してみることをお勧めしますが、このラボでは既に画像にラベルを付けた作成済みの COCO ファイルを提供しています。
+    - Vision Studio があなたの Blob ストレージを読み書きできるようにするボックスを選択します。
 
-1. **[COCO ファイルの追加]** を選択します。
-1. ドロップダウンで、**[Blob コンテナーから COCO ファイルをインポートする]** を選択します。
-1. `fruit` という名前のコンテナーを既に接続しているため、Vision Studio はこのコンテナーで COCO ファイルを検索します。 ドロップダウンから **training_labels.json** を選択し、COCO ファイルを追加します。
-1. 左側の **[カスタム モデル]** に移動し、**[新しいモデルのトレーニング]** を選択します。 次の設定を使用します。
+5. **training_images** データセットを選択します。
+
+プロジェクト作成のこの時点で、通常ならば **Create Azure ML Data Labeling Project (Azure ML データラベリングプロジェクトを作成)** を選択して画像にラベルを付け、COCO ファイルを生成します。もし時間があればこれを試してみてください。
+このラボでは、時間を短縮するために、すでに画像にラベルを付け、出力された結果の COCO ファイルを使用します。
+
+1. **Add COCO File** を選択します。
+2. ドロップダウンメニューから **Import COCO file from a Blob Container (Blob コンテナーから COCO ファイルをインポート)** を選択します。
+3. すでに `fruit` という名前のコンテナーを接続しているので、Vision Studio がその中から COCO ファイルを検索します。ドロップダウンメニューから **training_labels.json** を選択し、COCO ファイルを追加します。
+
+    ![Import and add COCO file](../media/02/inport_coco_file.png)
+
+4. 左側のメニューから **Custom Models ** に移動し、**Train a new model (新しいモデルをトレーニング)** を選択し、以下の設定をします。
+    ![Train a new model](../media/02/traing_a_new_model.png)
     - **モデルの名前**: classifyfruit
-    - **モデルの種類**: 画像分類
-    - **トレーニング データセットの選択**: training_images
-    - 残りは既定値のままにして、**[モデルのトレーニング]** を選択します。
+    - **モデルのタイプ**: Image classification (画像分類)
+    - **トレーニングデータセットを選択**: training_images
+    - その他の設定はデフォルトのままにして、**モデルをトレーニング** を選択します。
+    ![Train a new model 1](../media/02/train_a_new_model_1.png)
+    ![Train a new model 2](../media/02/train_a_new_model_2.png)
+    ![Train a new model 3](../media/02/train_a_new_model_3.png)
 
-トレーニングには時間がかかる場合があります。既定の予測時間は最大 1 時間ですが、このデータセットは小さいため、通常はそれよりもかなり短時間で完了します。 ジョブの状態が *[成功]* になるまで、数分ごとに **[更新]** ボタンを選択します。 モデルを選択します。
+トレーニングには時間がかかることがあります。デフォルトの予算は最大1時間ですが、この小さなデータセットの場合は通常それよりも早く完了します。数分ごとに **Refresh** ボタンを押して、ジョブのステータスが *成功* になるのを確認してください。ジョブのステータスが*成功*になったら、そのモデルを選択します。
 
-ここでは、トレーニング ジョブのパフォーマンスを表示できます。 トレーニング済みモデルの精度と正確性を確認します。
+ここでトレーニングジョブのパフォーマンスを確認できます。トレーニングされたモデルの精度と正確さを確認してください。
 
-## カスタム モデルをテストする
+## カスタムモデルをテストする
 
 モデルのトレーニングが完了し、テストする準備ができました。
 
-1. カスタム モデルのページの上部にある **[試してみる]** を選択します。
-1. ドロップダウンから **classifyfruit** モデルを選択して使用するモデルを指定し、**02-image-classification\test-images** フォルダーを参照します。
-1. 各画像を選択し、結果を表示します。 結果のボックスで **[JSON]** タブを選択して、完全な JSON 応答を確認します。
+1. カスタムモデルのページ上部で **Try it out** を選択します。
+2. 使用するモデルとして **classifyfruit** モデルをドロップダウンから選択します。テストで使用する画像は、**02-image-classification\test-images** フォルダーから選択するか、任意の画像をアップロードます。
+3. 各画像を選択して結果を確認します。結果ボックスの **JSON** タブを選択して、完全な JSON 応答を確認します。
+
+*結果表示例*
+![Prediction result](../media/02/custom_vision_try_it_out.png)
 
 <!-- Option coding example to run-->
 ## リソースをクリーンアップする
 
-このラボで作成した Azure リソースを他のトレーニング モジュールに使用していない場合は、それらを削除して、追加料金が発生しないようにすることができます。
+このラボで作成した Azure リソースを他のトレーニングモジュールで使用しない場合は、追加の料金が発生しないように削除することができます。
 
-1. `https://portal.azure.com` で Azure portal を開き、上部の検索バーで、このラボで作成したリソースを検索します。
+1. `https://portal.azure.com` で Azure ポータルを開き、上部の検索バーでこのラボで作成したリソースを検索します。
 
-2. [リソース] ページで **[削除]** を選択し、指示に従ってリソースを削除します。 または、リソース グループ全体を削除して、すべてのリソースを同時にクリーンアップすることもできます。
+2. リソースのページで **削除** を選択し、指示に従ってリソースを削除します。または、リソースグループ全体を削除して、すべてのリソースを一度にクリーンアップすることもできます。
